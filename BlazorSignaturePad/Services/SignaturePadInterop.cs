@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.JSInterop;
 using BlazorSignaturePad.Models;
-using static Dapper.SqlMapper;
 using System.Text.Json;
 
 namespace BlazorSignaturePad.Services
