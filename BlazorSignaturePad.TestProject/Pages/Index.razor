@@ -1,0 +1,79 @@
+﻿@page "/"
+@inject BlazorSignaturePad.Services.SignaturePadInterop SignatureInterop
+<MudContainer MaxWidth="MaxWidth.False">
+<MudGrid>
+        <MudItem xs="12" md="6" Style="height: 100vh">
+            <div class="d-flex justify-space-around ma-2 pa-2">
+                <MudButton Variant="@Variant.Filled" OnClick="@(async () => await ClearSignaturePad())">Clear Signature Pad</MudButton>
+                <MudButton Variant="@Variant.Filled" OnClick="@(async () => await RequestRawData())">Request Raw Data</MudButton>
+                <MudButton Variant="@Variant.Filled" OnClick="@(async () => await DrawDataFromTextBox())">Draw Json Data</MudButton>
+                        <MudToggleIconButton Toggled="@PadLocked"  ToggledChanged="@(async (e) => await LockSignaturePad(e))"
+                     Icon="@Icons.Material.Filled.LockOpen" Color="@Color.Success" Title="Unlocked"
+                     ToggledIcon="@Icons.Material.Filled.Lock" ToggledColor="@Color.Error" ToggledTitle="Locked"/>
+                        <span>Pad is @(PadLocked ? "Locked" : "Unlocked")</span>
+            </div>
+            <MudPaper Elevation="1" Class="ma-2 pa-1">
+                 <SignaturePad Settings="@signaturePadSettings"/>    
+            </MudPaper>
+            
+        </MudItem>
+        <MudItem xs="12" md="5" Class="ma-2 ma-1">
+            <MudTextField Label="Raw Data as JSON" Lines="50" Value="@RawData" Variant="@Variant.Outlined"/>
+        </MudItem>
+</MudGrid>
+</MudContainer>
+
+@code
+{
+    private BlazorSignaturePad.Models.SignaturePadSettings signaturePadSettings;
+
+    private async Task ClearSignaturePad()
+    {
+        await SignatureInterop.ClearSignaturePad();            
+    }
+
+    protected override void OnInitialized()
+    {
+        signaturePadSettings = new Models.SignaturePadSettings()
+        {
+            ContainerName = "container1",
+            IsLocked = false,
+            StagePixelWidth = 720,
+            StagePixelHeight = 240,
+            StrokeWidth = 5,
+            StrokeColor = "#16264c",
+            Ratio = 3
+        };
+    }
+
+    private async Task RequestRawData()
+    {
+        var data = await SignatureInterop.RequestSignatureData();    
+        RawData = data;
+        await InvokeAsync(() =>
+            {
+                StateHasChanged();
+            });
+    }
+
+    private async Task DrawDataFromTextBox()
+    {
+        if (!string.IsNullOrEmpty(RawData))
+        {
+            bool clearDataWhenSendingNewData = true;
+            await SignatureInterop.DrawFromJson(RawData, clearDataWhenSendingNewData);
+        }
+    }
+
+    public bool PadLocked { get; set; } = false;
+
+    private async Task LockSignaturePad(bool lockPad)
+    {
+        PadLocked = lockPad;
+        await SignatureInterop.LockUnlockSignaturePad(PadLocked);
+    }
+
+    private string RawData = null;
+
+
+}
